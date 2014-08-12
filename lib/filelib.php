@@ -1583,6 +1583,14 @@ function &get_mimetypes_array() {
 
         'zip'  => array ('type'=>'application/zip', 'icon'=>'archive', 'groups'=>array('archive'), 'string'=>'archive')
     );
+    // Add the customised mimetype if any.
+    $filetypes = \tool_filetypes\utils::get_filetypes();
+    foreach ($filetypes as $filetype) {
+        if (!array_key_exists($filetype->extension, $mimearray)) {
+            $mimearray[$filetype->extension] = array('type' => $filetype->mimetype,
+                    'icon' => $filetype->icon, 'string' => $filetype->description);
+        }
+    }
     return $mimearray;
 }
 
@@ -1864,6 +1872,9 @@ function get_mimetype_description($obj, $capitalise=false) {
         $result = get_string($safemimetype, 'mimetypes', (object)$a);
     } else if (get_string_manager()->string_exists($safemimetypestr, 'mimetypes')) {
         $result = get_string($safemimetypestr, 'mimetypes', (object)$a);
+    } else if ($description = \tool_filetypes\utils::get_mimetype_description ($mimetype)) {
+        // Used the customised mimetype description if available.
+        $result = $description;
     } else if (get_string_manager()->string_exists('default', 'mimetypes')) {
         $result = get_string('default', 'mimetypes', (object)$a);
     } else {

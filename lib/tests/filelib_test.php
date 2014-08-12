@@ -775,4 +775,54 @@ EOF;
         // Test it does nothing to the 'plain' data.
         $this->assertSame($httpsexpected, curl::strip_double_headers($httpsexpected));
     }
+
+    /**
+     * Test the get_mimetype_description function.
+     */
+    public function test_get_mimetype_description() {
+        $this->resetAfterTest();
+
+        // Test an existing file type in Core Moodle.
+        $filename = 'test.doc';
+        $this->assertEquals(get_mimetype_description(array('filename' => $filename)),
+                get_string(mimeinfo('type', $filename), 'mimetypes'));
+
+        // Test an unknown file type in Core Moodle.
+        $filename = 'test.mobi8';
+        $description = 'Kindle ebook';
+        $this->assertEquals(get_mimetype_description(array('filename' => $filename)),
+                get_string('document/unknown', 'mimetypes'));
+
+        // Add a new customised file type mobi8.
+        \tool_filetypes\utils::add_entry('mobi8', 'application/x-mobipocket-ebook', 'mobi8', $description);
+
+        // Test that file test.mobi8 is no longer an unknown file type.
+        $this->assertNotEquals(get_mimetype_description(array('filename' => $filename)),
+                get_string('document/unknown', 'mimetypes'));
+        $this->assertEquals(get_mimetype_description(array('filename' => $filename)), $description);
+    }
+
+    /**
+     * Test the get_mimetypes_array function.
+     */
+    public function test_get_mimetypes_array() {
+        $this->resetAfterTest();
+
+        $extension = 'doc';
+        $newextension = 'mobi9';
+        $newmimetype = 'application/x-mobipocket-ebook';
+        $mimeinfo = get_mimetypes_array();
+
+        // Mime type doc should already exist.
+        $this->assertEquals($mimeinfo[$extension]['type'], 'application/msword');
+        // Mime type mobi9 should not exist for now.
+        $this->assertTrue(empty($mimeinfo[$newextension]['type']));
+
+        // Add a new customised file type mobi9.
+        \tool_filetypes\utils::add_entry($newextension, $newmimetype, 'mobi9', 'Kindle ebook');
+
+        // Test that file type mobi8 should now exist.
+        $mimeinfo = get_mimetypes_array();
+        $this->assertEquals($mimeinfo[$newextension]['type'], $newmimetype);
+    }
 }
